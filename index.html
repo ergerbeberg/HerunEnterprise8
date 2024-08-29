@@ -5,7 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>和泰集團</title>
     <link rel="stylesheet" href="style.css">
-    <script>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBOiligBFJa8hYXP3vUUtZLS7rBH5D6vEk",
+            authDomain: "project-5897605956915932287.firebaseapp.com",
+            projectId: "project-5897605956915932287",
+            storageBucket: "project-5897605956915932287.appspot.com",
+            messagingSenderId: "594749809773",
+            appId: "1:594749809773:web:934c206a6a2d19e44d8b64",
+            measurementId: "G-62T1GPE7G0"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         document.addEventListener('DOMContentLoaded', function() {
             const otherBankCheckbox = document.getElementById('other_bank_checkbox');
             const otherBankText = document.getElementById('other_bank_text');
@@ -23,16 +42,38 @@
             otherBankCheckbox.addEventListener('change', toggleOtherBankInput);
 
             const form = document.querySelector('form');
-            form.addEventListener('submit', function(event) {
+            form.addEventListener('submit', async function(event) {
                 event.preventDefault(); // 防止表單的默認提交行為
 
-                // 顯示資料已保存提示
-                alert('資料已保存');
+                try {
+                    // 將表單資料存入 Firebase Firestore
+                    await addDoc(collection(db, "formData"), {
+                        name: document.getElementById('name').value,
+                        phone: document.getElementById('phone').value,
+                        gender: document.querySelector('input[name="gender"]:checked').value,
+                        age: document.getElementById('age').value,
+                        city: document.getElementById('city').value,
+                        industry: document.getElementById('industry').value,
+                        company: document.getElementById('company').value,
+                        position: document.getElementById('position').value,
+                        work_years: document.getElementById('work_years').value,
+                        income: document.getElementById('income').value,
+                        salary_transfer: document.querySelector('input[name="salary_transfer"]:checked').value,
+                        bank: document.getElementById('bank').value,
+                        other_bank: document.getElementById('other_bank_text').value
+                    });
 
-                // 自動轉向第二頁，使用GET方法將資料傳遞到下一頁
-                form.action = 'page2.html';
-                form.method = 'get'; // 使用GET方法
-                form.submit();
+                    // 顯示資料已保存提示
+                    alert('資料已保存');
+
+                    // 自動轉向第二頁，使用GET方法將資料傳遞到下一頁
+                    form.action = 'page2.html';
+                    form.method = 'get';
+                    form.submit();
+                } catch (e) {
+                    console.error("Error adding document: ", e);
+                    alert('資料保存失敗，請重試。');
+                }
             });
         });
     </script>
@@ -44,7 +85,7 @@
             <h1>和潤企業股份有限公司</h1>
         </div>
         <div class="form-title">信貸初審申請表</div>
-        <form method="get"> <!-- 使用GET方法提交 -->
+        <form method="post">
             <div class="form-group">
                 <label for="name">姓名：</label>
                 <input type="text" id="name" name="name" placeholder="申請人姓名(必填)" required>
@@ -124,3 +165,4 @@
     </div>
 </body>
 </html>
+
